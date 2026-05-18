@@ -1,6 +1,6 @@
 # 项目进度存档
 
-> 最后更新：2026-05-17
+> 最后更新：2026-05-18
 > 项目：**3D 钢筋平法可视化**（React + Vite + react-three-fiber + Tailwind + Leva）
 
 ---
@@ -178,3 +178,16 @@ f:\AIsaibotumu\Test-1\
 - 简洁直接的进度汇报
 - 倾向最小改动 / 不过度工程化
 - 注释保持现状，不主动增删
+
+---
+
+## 九、部署与 CI
+
+- **GitHub 仓库**：https://github.com/dj78b5zmzp-tech/Test-01-3D-
+- **线上地址**：https://dj78b5zmzp-tech.github.io/Test-01-3D-/
+- **CI 配置**：`.github/workflows/deploy.yml`（push 到 main 自动构建并部署到 GitHub Pages）
+- **关键配置**：`vite.config.ts` 的 `base: '/Test-01-3D-/'` 必须与仓库名一致
+- **本地推送代理**：`git config --global http.https://github.com.proxy http://127.0.0.1:7897`（Clash Verge 混合端口）
+
+### 备忘 / 待跟进
+- [ ] **Node.js 20 deprecation 警告**：2026-06-02 起 GitHub Actions 默认强制 Node 24，2026-09-16 移除 Node 20。当前 `actions/checkout@v4`、`actions/setup-node@v4`、`actions/configure-pages@v5`、`actions/upload-pages-artifact@v3` 内部仍是 Node 20，需关注官方升级；待新主版本发布后升 workflow 即可。参考：https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
