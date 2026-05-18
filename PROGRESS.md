@@ -183,10 +183,10 @@ f:\AIsaibotumu\Test-1\
 
 ## 九、部署与 CI
 
-- **GitHub 仓库**：https://github.com/dj78b5zmzp-tech/Test-01-3D-
-- **线上地址**：https://dj78b5zmzp-tech.github.io/Test-01-3D-/
+- **GitHub 仓库**：https://github.com/dj78b5zmzp-tech/Test-01-3D
+- **线上地址**：https://dj78b5zmzp-tech.github.io/Test-01-3D/
 - **CI 配置**：`.github/workflows/deploy.yml`（push 到 main 自动构建并部署到 GitHub Pages）
-- **关键配置**：`vite.config.ts` 的 `base: '/Test-01-3D-/'` 必须与仓库名一致
+- **关键配置**：`vite.config.ts` 的 `base: '/Test-01-3D/'` 必须与仓库名一致
 - **本地推送代理**：`git config --global http.https://github.com.proxy http://127.0.0.1:7897`（Clash Verge 混合端口）
 
 ### 备忘 / 待跟进
