@@ -3,3 +3,11 @@ dist
 .vite
 .DS_Store
 *.log
+tsconfig.tsbuildinfo
+
+# 防止与其他项目混淆：本仓库仅做 3D 钢筋平法可视化
+_ai_extract/
+extract_ai.py
+*.docx
+*.doc
+*.pdf
