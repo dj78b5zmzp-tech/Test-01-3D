@@ -27,6 +27,8 @@ npm run dev
 ```
 
 打开 http://localhost:5173 即可使用。
+钢筋 3D 可视化项目已上线：
+🌐 https://dj78b5zmzp-tech.github.io/Test-01-3D-/
 
 ## 项目结构
 
