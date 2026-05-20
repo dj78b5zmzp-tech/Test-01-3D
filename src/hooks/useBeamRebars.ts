@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import type { BeamParams } from '../types/beam'
 import { rebarUnitWeight, type RebarItem } from '../types/rebar'
 import { buildAnchoredPath, splitForLap, type BarSegment } from '../utils/longBarPath'
+import { stirrupSingleLength } from '../utils/rebarGeometry'
 
 export interface LongBar {
   /** 一根钢筋切分后的分段路径 (>=1 段)，每段内是一段独立的钢筋实体 */
@@ -56,7 +57,7 @@ export function useBeamLayout(p: BeamParams): BeamLayout {
     for (let x = -length / 2 + endCover; x <= length / 2 - endCover + 1e-6; x += stirrup.spacing)
       stirrupXs.push(x)
     const stirrupHookLen = Math.max(10 * stirrup.diameter, 75)
-    const stirrupSingleLen = 2 * (innerW + innerH) + 2 * stirrupHookLen
+    const stirrupSingleLen = stirrupSingleLength(innerW, innerH, stirrupHookLen, stirrup.diameter)
 
     // ---- 纵筋路径生成 ----
     const buildBars = (

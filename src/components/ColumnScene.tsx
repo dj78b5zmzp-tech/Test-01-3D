@@ -44,7 +44,7 @@ export default function ColumnScene({ params, highlightId, onPick, onLayout, sce
 
   // 箍筋几何 (XZ 平面闭合矩形 -> 沿Y方向阵列)
   const stirrupGeom = useMemo(() => {
-    const curve = buildStirrupCurve(layout.innerW, layout.innerD, stirrup.diameter * 6)
+    const curve = buildStirrupCurve(layout.innerW, layout.innerD, stirrup.diameter * 6, stirrup.diameter)
     const tube = new THREE.TubeGeometry(curve as unknown as THREE.Curve<THREE.Vector3>, 160, stirrup.diameter / 2, 12, false)
     tube.rotateX(Math.PI / 2) // XY -> XZ
     return tube
