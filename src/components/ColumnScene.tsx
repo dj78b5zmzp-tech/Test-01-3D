@@ -112,16 +112,16 @@ export default function ColumnScene({ params, highlightId, onPick, onLayout, sce
         {showAnnotations && (
           <>
             <RebarAnnotation
-              position={[width / 2 + 200, height / 2 + 100, 0]}
+              position={[width / 2 + 300, height / 2 + 200, 0]}
               text={`柱纵筋: ${longItem.count}${longRebar.grade}${longRebar.diameter}`}
             />
             <RebarAnnotation
-              position={[-width / 2 - 200, 0, depth / 2 + 100]}
+              position={[-width / 2 - 300, 0, depth / 2 + 200]}
               text={`箍筋: ${formatStirrup(stirrup.grade, stirrup.diameter, stirrup.spacing)}`}
               color="#22d3ee"
             />
             <RebarAnnotation
-              position={[0, -height / 2 - 200, 0]}
+              position={[0, -height / 2 - 350, 0]}
               text={`b×h×H = ${width}×${depth}×${height}  保护层${cover}`}
               color="#f87171"
             />

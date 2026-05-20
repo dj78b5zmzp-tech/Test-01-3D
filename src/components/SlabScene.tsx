@@ -97,19 +97,19 @@ export default function SlabScene({ params, highlightId, onPick, onLayout, scene
         {showAnnotations && (
           <>
             <RebarAnnotation
-              position={[lengthX / 2 + 200, -thickness / 2, 0]}
+              position={[lengthX / 2 + 300, -thickness / 2 - 200, 0]}
               text={`底筋: ${params.bottomRebarX.grade}${params.bottomRebarX.diameter}@${params.bottomRebarX.spacing}(X) / ${params.bottomRebarZ.grade}${params.bottomRebarZ.diameter}@${params.bottomRebarZ.spacing}(Z)`}
               color="#fb923c"
             />
             {params.hasTopRebar && (
               <RebarAnnotation
-                position={[lengthX / 2 + 200, thickness / 2, 0]}
+                position={[-lengthX / 2 - 300, thickness / 2 + 200, 0]}
                 text={`面筋: ${params.topRebarX.grade}${params.topRebarX.diameter}@${params.topRebarX.spacing}(X) / ${params.topRebarZ.grade}${params.topRebarZ.diameter}@${params.topRebarZ.spacing}(Z)`}
                 color="#fbbf24"
               />
             )}
             <RebarAnnotation
-              position={[0, -thickness / 2 - 200, 0]}
+              position={[0, -thickness / 2 - 450, 0]}
               text={`板 ${lengthX}×${lengthZ}×${thickness}  保护层${cover}`}
               color="#f87171"
             />

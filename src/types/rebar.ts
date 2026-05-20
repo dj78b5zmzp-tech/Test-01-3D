@@ -2,6 +2,8 @@ import type { RebarGrade } from './beam'
 
 export type RebarRole = 'topMain' | 'bottomMain' | 'waist' | 'stirrup'
 
+export type RebarStatus = 'Verified' | 'Warn' | 'Error' | ''
+
 export interface RebarItem {
   id: string // 唯一 ID，例 "TM-1" / "ST-12"
   role: RebarRole
@@ -12,6 +14,8 @@ export interface RebarItem {
   count: number // 数量
   unitWeight: number // kg/m (按公称直径)
   totalWeight: number // kg (= singleLength/1000 * count * unitWeight)
+  note?: string // 备注（锚固方式、间距等）
+  status?: RebarStatus // 校验状态
 }
 
 /** 钢筋单位重量 (kg/m)，按公称直径计算，密度7850 */

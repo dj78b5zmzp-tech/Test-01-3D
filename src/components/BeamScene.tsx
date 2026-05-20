@@ -141,7 +141,7 @@ export default function BeamScene({ params, highlightId, onPick, onLayout, scene
               text={`下部纵筋: ${formatRebar(bottomRebar.grade, bottomRebar.diameter, bottomRebar.count)}`}
             />
             <RebarAnnotation
-              position={[0, height / 2 + 150, 0]}
+              position={[0, height / 2 + 350, 0]}
               text={`箍筋: ${formatStirrup(stirrup.grade, stirrup.diameter, stirrup.spacing)}`}
               color="#22d3ee"
             />
@@ -153,12 +153,12 @@ export default function BeamScene({ params, highlightId, onPick, onLayout, scene
               />
             )}
             <RebarAnnotation
-              position={[0, -height / 2 - 200, 0]}
+              position={[length / 4, -height / 2 - 400, 0]}
               text={`b×h×Ln = ${width}×${height}×${length}  保护层${cover}`}
               color="#f87171"
             />
             <RebarAnnotation
-              position={[0, -height / 2 - 360, 0]}
+              position={[-length / 4, -height / 2 - 400, 0]}
               text={`锚固 La=${layout.anchorInfo.La}mm  ${layout.anchorInfo.isBendAnchor ? '弯锚(15d)' : '直锚'}`}
               color="#34d399"
             />

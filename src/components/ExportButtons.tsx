@@ -49,14 +49,15 @@ export default function ExportButtons({ getScene }: Props) {
     saveBlob(stl.buffer as ArrayBuffer, `rebar-beam-${stamp()}.stl`, 'application/octet-stream')
   }
 
-  const btn = 'px-2.5 py-1 rounded text-xs border border-slate-600 hover:border-sky-400 hover:text-sky-300 bg-slate-800/70'
-
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-400 mr-1">导出:</span>
-      <button className={btn} onClick={() => exportGLTF(true)}>GLB</button>
-      <button className={btn} onClick={() => exportGLTF(false)}>GLTF</button>
-      <button className={btn} onClick={exportSTL}>STL</button>
+    <div className="flex items-center space-x-2">
+      <span className="text-on-surface-variant text-sm mr-2">导出:</span>
+      <button className="px-3 py-1 bg-primary text-on-primary rounded text-sm hover:bg-primary/90 transition-colors shadow-sm font-semibold"
+        onClick={() => exportGLTF(true)}>导出 GLB</button>
+      <button className="px-3 py-1 border border-outline-variant text-on-surface rounded text-sm hover:bg-surface-container-highest transition-colors"
+        onClick={() => exportGLTF(false)}>GLTF</button>
+      <button className="px-3 py-1 border border-outline-variant text-on-surface rounded text-sm hover:bg-surface-container-highest transition-colors"
+        onClick={exportSTL}>STL</button>
     </div>
   )
 }

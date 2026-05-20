@@ -8,19 +8,20 @@ interface Props {
 
 export default function RebarAnnotation({ position, text, color = '#facc15' }: Props) {
   return (
-    <Html position={position} center distanceFactor={8} zIndexRange={[100, 0]}>
+    <Html position={position} center zIndexRange={[100, 0]}>
       <div
         style={{
-          background: 'rgba(15, 23, 42, 0.85)',
+          background: 'rgba(15, 23, 42, 0.88)',
           color,
           border: `1px solid ${color}`,
-          padding: '2px 8px',
-          borderRadius: 4,
-          fontSize: 12,
+          padding: '1px 6px',
+          borderRadius: 3,
+          fontSize: 11,
           fontFamily: 'monospace',
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
           boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          lineHeight: 1.4,
         }}
       >
         {text}

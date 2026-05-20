@@ -108,6 +108,10 @@ export function useBeamLayout(p: BeamParams): BeamLayout {
 
     const items: RebarPlacement[] = []
 
+    const La = laFactor * Math.max(topRebar.diameter, bottomRebar.diameter)
+    const innerInSupport = supportWidth - cover
+    const isBendAnchor = innerInSupport < La
+
     const pushLongItem = (
       id: string,
       label: string,
@@ -121,16 +125,22 @@ export function useBeamLayout(p: BeamParams): BeamLayout {
       const segCount = totalSegCount(bars)
       const avgSingle = totalLen / segCount
       const uw = rebarUnitWeight(diameter)
+      const hasLap = bars.some(b => b.segments.length > 1)
+      let note = isBendAnchor ? '弯锚' : '直锚'
+      if (hasLap) note += ' 搭接'
+      if (role === 'waist') note = `每侧${waistRebar.perSide}根`
       items.push({
         id,
         role,
         label,
         grade,
         diameter,
-        singleLength: Math.round(avgSingle), // 平均单根分段长(展开)
-        count: segCount, // 总段数
+        singleLength: Math.round(avgSingle),
+        count: segCount,
         unitWeight: uw,
         totalWeight: (totalLen / 1000) * uw,
+        note,
+        status: isBendAnchor ? 'Warn' as const : 'Verified' as const,
         bars,
         beamLength: length,
       })
@@ -142,6 +152,7 @@ export function useBeamLayout(p: BeamParams): BeamLayout {
 
     {
       const uw = rebarUnitWeight(stirrup.diameter)
+      const stiNote = `间距${stirrup.spacing} n=${stirrupXs.length}`
       items.push({
         id: 'ST',
         role: 'stirrup',
@@ -152,6 +163,8 @@ export function useBeamLayout(p: BeamParams): BeamLayout {
         count: stirrupXs.length,
         unitWeight: uw,
         totalWeight: (stirrupSingleLen / 1000) * stirrupXs.length * uw,
+        note: stiNote,
+        status: 'Verified' as const,
         stirrupXs,
         innerW,
         innerH,
@@ -159,10 +172,6 @@ export function useBeamLayout(p: BeamParams): BeamLayout {
         beamLength: length,
       })
     }
-
-    const La = laFactor * Math.max(topRebar.diameter, bottomRebar.diameter)
-    const innerInSupport = supportWidth - cover
-    const isBendAnchor = innerInSupport < La
 
     return {
       innerW,

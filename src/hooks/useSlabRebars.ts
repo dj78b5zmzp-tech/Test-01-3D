@@ -51,6 +51,8 @@ export function useSlabLayout(p: SlabParams): SlabLayout {
         count,
         unitWeight: uw,
         totalWeight: (single / 1000) * count * uw,
+        note: `@${spec.spacing} n=${count}`,
+        status: 'Verified' as const,
         direction,
         layer,
         positions,

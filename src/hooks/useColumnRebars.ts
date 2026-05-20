@@ -63,6 +63,8 @@ export function useColumnLayout(p: ColumnParams): ColumnLayout {
         count: totalLong,
         unitWeight: uw,
         totalWeight: (len / 1000) * totalLong * uw,
+        note: `周圈${totalLong}根 H=${height}`,
+        status: 'Verified',
         positions,
         columnHeight: height,
       })
@@ -80,6 +82,8 @@ export function useColumnLayout(p: ColumnParams): ColumnLayout {
         count: stirrupYs.length,
         unitWeight: uw,
         totalWeight: (single / 1000) * stirrupYs.length * uw,
+        note: `间距${stirrup.spacing} n=${stirrupYs.length}`,
+        status: 'Verified',
         stirrupYs,
         innerW,
         innerD,
