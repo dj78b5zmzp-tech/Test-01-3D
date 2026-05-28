@@ -1,8 +1,17 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import * as THREE from 'three'
 import type { BeamParams, RebarGrade } from '../types/beam'
 import type { ColumnParams, SlabParams, ComponentKind } from '../types/component'
 import type { SetParam } from './ParameterPanel'
+import {
+  chatCompletion,
+  buildSystemMessages,
+  extractParamAction,
+  getApiKey,
+  setApiKey as saveApiKey,
+  type ChatMessage,
+  type ParamAction,
+} from '../utils/aiService'
 
 /* ═══════ tiny reusable controls ═══════ */
 
@@ -373,28 +382,141 @@ const SUGGESTED_PROMPTS = [
   '将梁宽调整为 350mm，并确保配筋合理',
 ]
 
-function AIChatTab() {
+interface AIChatTabProps {
+  kind: ComponentKind
+  beamParams: BeamParams
+  setBeam: SetParam<BeamParams>
+  columnParams: ColumnParams
+  setColumn: SetParam<ColumnParams>
+  slabParams: SlabParams
+  setSlab: SetParam<SlabParams>
+}
+
+function AIChatTab({ kind, beamParams, setBeam, columnParams, setColumn, slabParams, setSlab }: AIChatTabProps) {
   const [messages, setMessages] = useState<ChatMsg[]>([
     { role: 'system', content: 'AI 助手已就绪。您可以询问钢筋参数、配筋规范、成本估算，或让 AI 直接调整模型参数。' },
-    { role: 'assistant', content: '你好！我是钢筋 BIM 助手，可以帮你分析配筋方案、检查规范符合性、优化参数或估算用钢量。\n\n试试下方的快捷提问，或直接输入你的问题。' },
+    { role: 'assistant', content: '你好！我是钢筋 BIM 助手（DeepSeek 驱动），可以帮你分析配筋方案、检查规范符合性、优化参数或估算用钢量。\n\n点击右上角 ⚙ 设置 API Key 后即可开始对话。' },
   ])
   const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [keyInput, setKeyInput] = useState('')
+  const [keySaved, setKeySaved] = useState(() => !!getApiKey())
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  const send = () => {
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages])
+
+  const getContextJson = useCallback(() => {
+    const current = kind === 'beam' ? beamParams : kind === 'column' ? columnParams : slabParams
+    return JSON.stringify({ constructType: kind, ...current }, null, 2)
+  }, [kind, beamParams, columnParams, slabParams])
+
+  const applyParamAction = useCallback((pa: ParamAction) => {
+    const entries = Object.entries(pa.params)
+    if (pa.target === 'beam') entries.forEach(([k, v]) => setBeam(k as keyof BeamParams, v as never))
+    else if (pa.target === 'column') entries.forEach(([k, v]) => setColumn(k as keyof ColumnParams, v as never))
+    else if (pa.target === 'slab') entries.forEach(([k, v]) => setSlab(k as keyof SlabParams, v as never))
+    return entries.map(([k, v]) => `${k} → ${v}`).join('、')
+  }, [setBeam, setColumn, setSlab])
+
+  const handleSaveKey = () => {
+    const k = keyInput.trim()
+    if (!k) return
+    saveApiKey(k)
+    setKeySaved(true)
+    setKeyInput('')
+    setShowSettings(false)
+    setMessages(prev => [...prev, { role: 'system', content: 'API Key 已保存，可以开始对话了。' }])
+  }
+
+  const send = async () => {
     const text = input.trim()
-    if (!text) return
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', content: text },
-      { role: 'assistant', content: '✨ 该功能正在开发中，后续将接入大语言模型 API 实现智能对话。\n\n您输入的是：\n> ' + text },
-    ])
+    if (!text || loading) return
+    const apiKey = getApiKey()
+    if (!apiKey) {
+      setShowSettings(true)
+      setMessages(prev => [...prev, { role: 'system', content: '请先设置 DeepSeek API Key。' }])
+      return
+    }
+
+    setMessages(prev => [...prev, { role: 'user', content: text }])
     setInput('')
+    setLoading(true)
+
+    const history: ChatMessage[] = [
+      ...buildSystemMessages(getContextJson()),
+      ...messages.filter(m => m.role !== 'system').map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      { role: 'user' as const, content: text },
+    ]
+
+    const result = await chatCompletion(history, apiKey)
+    setLoading(false)
+
+    if (!result.ok) {
+      setMessages(prev => [...prev, { role: 'system', content: `⚠️ ${result.error}` }])
+      return
+    }
+
+    let reply = result.content
+    const pa = extractParamAction(reply)
+    if (pa) {
+      const desc = applyParamAction(pa)
+      reply = reply.replace(/```json\s*\n?\s*\{[\s\S]*?\}\s*\n?\s*```\s*$/, '').trim()
+      reply += `\n\n✅ 已自动调整参数：${desc}`
+    }
+    setMessages(prev => [...prev, { role: 'assistant', content: reply }])
   }
 
   return (
-    <div className="flex flex-col h-full -m-4">
+    <div className="flex flex-col h-full">
+      {/* 顶部工具栏 */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-outline-variant/30">
+        <span className="text-xs text-on-surface-variant flex items-center gap-1.5">
+          <span className="material-symbols-outlined text-[14px]">smart_toy</span>
+          DeepSeek · {kind === 'beam' ? '梁' : kind === 'column' ? '柱' : '板'}模式
+        </span>
+        <div className="flex items-center gap-1">
+          {keySaved && (
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1" title="API Key 已配置" />
+          )}
+          <button onClick={() => setShowSettings(!showSettings)} title="设置 API Key"
+            className="w-7 h-7 rounded-md flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors">
+            <span className="material-symbols-outlined text-[16px]">settings</span>
+          </button>
+          <button onClick={() => {
+            setMessages([
+              { role: 'system', content: 'AI 助手已就绪。' },
+              { role: 'assistant', content: '对话已清空，请继续提问。' },
+            ])
+          }} title="清空对话"
+            className="w-7 h-7 rounded-md flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors">
+            <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+          </button>
+        </div>
+      </div>
+
+      {/* API Key 设置面板 */}
+      {showSettings && (
+        <div className="px-4 py-3 border-b border-outline-variant/30 bg-surface-container/60 space-y-2">
+          <p className="text-xs text-on-surface-variant">输入 DeepSeek API Key（仅存储在本地浏览器中）</p>
+          <div className="flex gap-2">
+            <input type="password" value={keyInput} onChange={e => setKeyInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSaveKey()}
+              placeholder="sk-..."
+              className="flex-1 bg-surface-dim text-sm text-on-surface rounded-md px-2.5 py-1.5 border border-outline-variant/30 focus:border-primary focus:ring-0 placeholder:text-on-surface-variant/40 font-mono" />
+            <button onClick={handleSaveKey}
+              className="px-3 py-1.5 rounded-md bg-primary text-on-primary text-xs hover:bg-primary/80 transition-colors">
+              保存
+            </button>
+          </div>
+          {keySaved && <p className="text-[10px] text-green-400">✓ 已有 Key，重新输入可覆盖</p>}
+        </div>
+      )}
+
       {/* 消息列表 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, i) => {
           if (msg.role === 'system') {
             return (
@@ -421,6 +543,16 @@ function AIChatTab() {
             </div>
           )
         })}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
+              <span className="material-symbols-outlined text-primary text-[14px] animate-spin">progress_activity</span>
+            </div>
+            <div className="bg-surface-container text-on-surface-variant border border-outline-variant/30 rounded-xl rounded-bl-sm px-3 py-2 text-sm">
+              思考中…
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 快捷提问 */}
@@ -437,15 +569,18 @@ function AIChatTab() {
       <div className="p-3 border-t border-outline-variant bg-surface-container-low/80">
         <div className="flex gap-2">
           <input type="text" value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && send()}
-            placeholder="输入问题，如“检查配筋率”“优化箍筋”..."
-            className="flex-1 bg-surface-dim text-sm text-on-surface rounded-lg px-3 py-2 border border-outline-variant/30 focus:border-primary focus:ring-0 placeholder:text-on-surface-variant/50" />
-          <button onClick={send}
-            className="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-colors flex-shrink-0">
+            onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && send()}
+            placeholder={loading ? '等待回复中…' : '输入问题，如"检查配筋率""优化箍筋"...'}
+            disabled={loading}
+            className="flex-1 bg-surface-dim text-sm text-on-surface rounded-lg px-3 py-2 border border-outline-variant/30 focus:border-primary focus:ring-0 placeholder:text-on-surface-variant/50 disabled:opacity-50" />
+          <button onClick={send} disabled={loading}
+            className="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-colors flex-shrink-0 disabled:opacity-50">
             <span className="material-symbols-outlined text-[18px]">send</span>
           </button>
         </div>
-        <p className="text-[10px] text-on-surface-variant/50 mt-1.5 text-center">功能开发中 · 后续将接入 AI 大模型</p>
+        <p className="text-[10px] text-on-surface-variant/50 mt-1.5 text-center">
+          由 DeepSeek 大模型驱动 · API Key 仅存于本地
+        </p>
       </div>
     </div>
   )
@@ -488,7 +623,7 @@ export default function RightPanel({ kind, setKind, beamParams, setBeam, columnP
       {/* Scrollable content */}
       {tab === 4 ? (
         <div className="flex-1 flex flex-col overflow-hidden">
-          <AIChatTab />
+          <AIChatTab kind={kind} beamParams={beamParams} setBeam={setBeam} columnParams={columnParams} setColumn={setColumn} slabParams={slabParams} setSlab={setSlab} />
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto p-4 scroll-smooth">
